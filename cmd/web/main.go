@@ -7,12 +7,14 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/NikitaAksenov/snippetbox/internal/models"
 	_ "github.com/mattn/go-sqlite3"
 )
 
 type application struct {
 	infoLog  *log.Logger
 	errorLog *log.Logger
+	snippets *models.SnippetModel
 }
 
 func main() {
@@ -35,6 +37,7 @@ func main() {
 	app := &application{
 		infoLog:  infoLog,
 		errorLog: errorLog,
+		snippets: &models.SnippetModel{DB: db},
 	}
 
 	srv := &http.Server{

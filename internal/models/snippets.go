@@ -52,10 +52,7 @@ func (m *SnippetModel) Get(id int) (*Snippet, error) {
 
 	row := m.DB.QueryRow(query, id)
 
-	snippet := Snippet{}
-
-	var createdStr, expiresStr string
-	err := row.Scan(&snippet.ID, &snippet.Title, &snippet.Content, &createdStr, &expiresStr)
+	snippet, err := ParseRowToSnippet(row)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrNoRecord
@@ -64,17 +61,7 @@ func (m *SnippetModel) Get(id int) (*Snippet, error) {
 		}
 	}
 
-	snippet.Created, err = time.Parse(DateTime, createdStr)
-	if err != nil {
-		return nil, nil
-	}
-
-	snippet.Expires, err = time.Parse(DateTime, expiresStr)
-	if err != nil {
-		return nil, nil
-	}
-
-	return &snippet, nil
+	return snippet, nil
 }
 
 func (m *SnippetModel) Latest(count int) ([]*Snippet, error) {

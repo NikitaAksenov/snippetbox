@@ -41,8 +41,6 @@ func (m *SnippetModel) Insert(title string, content string, expires int) (int, e
 	return int(lastID), err
 }
 
-const DateTime string = "2006-01-02 15:04:05"
-
 func (m *SnippetModel) Get(id int) (*Snippet, error) {
 	query := `
 	SELECT id, title, content, created, expires
@@ -65,5 +63,35 @@ func (m *SnippetModel) Get(id int) (*Snippet, error) {
 }
 
 func (m *SnippetModel) Latest(count int) ([]*Snippet, error) {
-	return nil, nil
+	query := `
+	SELECT id, title, content, created, expires
+		FROM snippets
+		WHERE datetime('now') < expires
+		ORDER BY id DESC
+		LIMIT ?
+	;`
+
+	rows, err := m.DB.Query(query, count)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	latestSnippets := make([]*Snippet, 0, 10)
+
+	for rows.Next() {
+		snippet, err := ParseRowsToSnippet(rows)
+		if err != nil {
+			return nil, err
+		}
+
+		latestSnippets = append(latestSnippets, snippet)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	return latestSnippets, nil
 }
